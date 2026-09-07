@@ -127,7 +127,7 @@ Independent Python / SQL reconciliation on the same filters lands near **£19.7M
 data/          cleaned tables (csv / xlsx / parquet)
 excel/         dictionary, cleaning log, summary
 sql/           KPI and quality queries
-python/        EDA / cleaning / feature scripts
+notebooks/     analysis notebooks (.ipynb)
 dashboard/     Power BI project (.pbip)
 screenshots/   dashboard page images
 artifacts/     walkthrough video
