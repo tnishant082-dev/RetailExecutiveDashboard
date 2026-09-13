@@ -1,0 +1,245 @@
+{
+  "name": "Retail Executive",
+  "dataColors": [
+    "#38BDF8",
+    "#22C55E",
+    "#F59E0B",
+    "#EF4444",
+    "#818CF8",
+    "#14B8A6",
+    "#F472B6",
+    "#A3E635",
+    "#E2E8F0",
+    "#F8FAFC"
+  ],
+  "foreground": "#F8FAFC",
+  "foregroundNeutralSecondary": "#E2E8F0",
+  "foregroundNeutralTertiary": "#CBD5E1",
+  "background": "#0F172A",
+  "backgroundLight": "#1E293B",
+  "backgroundNeutral": "#334155",
+  "tableAccent": "#38BDF8",
+  "good": "#22C55E",
+  "neutral": "#F59E0B",
+  "bad": "#EF4444",
+  "maximum": "#38BDF8",
+  "center": "#F59E0B",
+  "minimum": "#EF4444",
+  "textClasses": {
+    "callout": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 36,
+      "color": "#F8FAFC"
+    },
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 16,
+      "color": "#F8FAFC"
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 12,
+      "color": "#E2E8F0"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 12,
+      "color": "#E2E8F0"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#1E293B"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#475569"
+              }
+            },
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true,
+            "preset": "Custom",
+            "color": {
+              "solid": {
+                "color": "#000000"
+              }
+            },
+            "transparency": 60,
+            "shadowSpread": 0,
+            "shadowBlur": 16,
+            "angle": 90,
+            "shadowDistance": 6,
+            "position": "Outer"
+          }
+        ],
+        "title": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#F8FAFC"
+              }
+            },
+            "fontSize": 16,
+            "fontFamily": "Segoe UI Semibold",
+            "titleWrap": true
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#0F172A"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#0F172A"
+              }
+            },
+            "transparency": 0
+          }
+        ]
+      }
+    },
+    "card": {
+      "*": {
+        "labels": [
+          {
+            "fontSize": 36,
+            "fontFamily": "Segoe UI Semibold",
+            "color": {
+              "solid": {
+                "color": "#F8FAFC"
+              }
+            }
+          }
+        ],
+        "categoryLabels": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "areaChart": {
+      "*": {
+        "legend": [
+          {
+            "show": false
+          }
+        ],
+        "valueAxis": [
+          {
+            "show": false,
+            "showAxisTitle": false,
+            "gridlineShow": false
+          }
+        ],
+        "categoryAxis": [
+          {
+            "showAxisTitle": false,
+            "labelColor": {
+              "solid": {
+                "color": "#E2E8F0"
+              }
+            },
+            "fontSize": 12
+          }
+        ]
+      }
+    },
+    "barChart": {
+      "*": {
+        "legend": [
+          {
+            "show": false
+          }
+        ],
+        "valueAxis": [
+          {
+            "show": false,
+            "showAxisTitle": false,
+            "gridlineShow": false
+          }
+        ],
+        "categoryAxis": [
+          {
+            "showAxisTitle": false,
+            "labelColor": {
+              "solid": {
+                "color": "#E2E8F0"
+              }
+            },
+            "fontSize": 12
+          }
+        ],
+        "labels": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#F8FAFC"
+              }
+            },
+            "fontSize": 11
+          }
+        ]
+      }
+    },
+    "slicer": {
+      "*": {
+        "header": [
+          {
+            "show": false
+          }
+        ],
+        "items": [
+          {
+            "fontSize": 12,
+            "fontFamily": "Segoe UI",
+            "foreground": {
+              "solid": {
+                "color": "#F8FAFC"
+              }
+            },
+            "background": {
+              "solid": {
+                "color": "#1E293B"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

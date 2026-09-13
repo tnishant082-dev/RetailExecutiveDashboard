@@ -1,0 +1,1753 @@
+{
+  "compatibilityLevel": 1606,
+  "model": {
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"pOnlineRetailPath\", \"Online Retail Combined\", \"Dim Product\", \"Dim Customer\", \"Dim Geography\", \"Fact Sales\", \"Last Refresh\"]"
+      },
+      {
+        "name": "PBI_ProTooling",
+        "value": "[\"DevMode\"]"
+      }
+    ],
+    "culture": "en-GB",
+    "cultures": [
+      {
+        "name": "en-GB",
+        "linguisticMetadata": {
+          "content": {
+            "Language": "en-GB",
+            "Version": "1.0.0"
+          },
+          "contentType": "json"
+        }
+      }
+    ],
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "discourageImplicitMeasures": true,
+    "expressions": [
+      {
+        "name": "pOnlineRetailPath",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ],
+        "expression": "\"E:\\DS-Command-Cente\\powerbi\\RetailExecutiveDashboard\\data\\online_retail_II.xlsx\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "kind": "m",
+        "lineageTag": "3db59e93-b143-4547-8486-1b7dbdf69970"
+      },
+      {
+        "name": "Online Retail Combined",
+        "expression": [
+          "let",
+          "    Source = Excel.Workbook(File.Contents(pOnlineRetailPath), null, true),",
+          "    Sheet0910 = Source{[Item=\"Year 2009-2010\", Kind=\"Sheet\"]}[Data],",
+          "    Sheet1011 = Source{[Item=\"Year 2010-2011\", Kind=\"Sheet\"]}[Data],",
+          "    Promote0910 = Table.PromoteHeaders(Sheet0910, [PromoteAllScalars=true]),",
+          "    Promote1011 = Table.PromoteHeaders(Sheet1011, [PromoteAllScalars=true]),",
+          "    Combined = Table.Combine({Promote0910, Promote1011}),",
+          "    Typed = Table.TransformColumns(",
+          "        Combined,",
+          "        {",
+          "            {\"Invoice\", each if _ = null then null else Text.Trim(Text.From(_)), type text},",
+          "            {\"StockCode\", each if _ = null then null else Text.Trim(Text.From(_)), type text},",
+          "            {\"Description\", each if _ = null then \"Unknown Product\" else Text.Trim(Text.From(_)), type text},",
+          "            {\"Quantity\", each try Int64.From(_) otherwise null, Int64.Type},",
+          "            {\"InvoiceDate\", each try DateTime.From(_) otherwise null, type datetime},",
+          "            {\"Price\", each try Number.From(_) otherwise null, type number},",
+          "            {\"Customer ID\", each if _ = null then null else try Text.From(Int64.From(_)) otherwise Text.Trim(Text.From(_)), type text},",
+          "            {\"Country\", each if _ = null then \"Unknown\" else Text.Trim(Text.From(_)), type text}",
+          "        }",
+          "    ),",
+          "    Filtered = Table.SelectRows(",
+          "        Typed,",
+          "        each [Invoice] <> null and [Invoice] <> \"\"",
+          "            and [StockCode] <> null and [StockCode] <> \"\"",
+          "            and [InvoiceDate] <> null",
+          "            and [Quantity] <> null",
+          "            and [Price] <> null",
+          "    ),",
+          "    Deduped = Table.Distinct(",
+          "        Filtered,",
+          "        {\"Invoice\", \"StockCode\", \"InvoiceDate\", \"Quantity\", \"Price\", \"Customer ID\", \"Country\"}",
+          "    ),",
+          "    FeeCodes = {\"POST\", \"DOT\", \"AMAZONFEE\", \"BANK CHARGES\", \"PADS\", \"CRUK\"},",
+          "    WithFlags = Table.AddColumn(",
+          "        Deduped,",
+          "        \"Is Cancel\",",
+          "        each Text.StartsWith([Invoice], \"C\"),",
+          "        type logical",
+          "    ),",
+          "    WithFee = Table.AddColumn(",
+          "        WithFlags,",
+          "        \"Is Fee\",",
+          "        each List.Contains(FeeCodes, Text.Upper([StockCode])),",
+          "        type logical",
+          "    ),",
+          "    WithRevenue = Table.AddColumn(",
+          "        WithFee,",
+          "        \"Is Revenue\",",
+          "        each [Is Cancel] = false and [Is Fee] = false and [Quantity] > 0 and [Price] > 0,",
+          "        type logical",
+          "    ),",
+          "    WithGuest = Table.AddColumn(",
+          "        WithRevenue,",
+          "        \"Is Guest\",",
+          "        each [Customer ID] = null,",
+          "        type logical",
+          "    ),",
+          "    WithAmount = Table.AddColumn(",
+          "        WithGuest,",
+          "        \"Line Amount\",",
+          "        each Number.Round ( [Quantity] * [Price], 2 ),",
+          "        type number",
+          "    ),",
+          "    WithDate = Table.AddColumn(",
+          "        WithAmount,",
+          "        \"Order Date\",",
+          "        each Date.From([InvoiceDate]),",
+          "        type date",
+          "    )",
+          "in",
+          "    WithDate"
+        ],
+        "kind": "m",
+        "lineageTag": "06950667-3fe1-4f0f-88f9-cc00be4cfa33"
+      }
+    ],
+    "relationships": [
+      {
+        "name": "3a9b323f-ad80-4af5-8a8a-ddb39a849588",
+        "fromColumn": "Order Date",
+        "fromTable": "Fact Sales",
+        "toColumn": "Date",
+        "toTable": "Date"
+      },
+      {
+        "name": "e6339f3c-08e3-435f-b33c-dee7f8472d4f",
+        "fromColumn": "Product Key",
+        "fromTable": "Fact Sales",
+        "toColumn": "Product Key",
+        "toTable": "Dim Product"
+      },
+      {
+        "name": "4627e351-5af1-4e96-957f-8eb16d13b59d",
+        "fromColumn": "Customer ID",
+        "fromTable": "Fact Sales",
+        "toColumn": "Customer ID",
+        "toTable": "Dim Customer"
+      },
+      {
+        "name": "ae329da9-5604-4759-84ae-965058632fcd",
+        "fromColumn": "Country",
+        "fromTable": "Fact Sales",
+        "toColumn": "Country",
+        "toTable": "Dim Geography"
+      }
+    ],
+    "sourceQueryCulture": "en-GB",
+    "tables": [
+      {
+        "name": "Fact Sales",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "Sales Line Key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "1. Keys",
+            "isHidden": true,
+            "lineageTag": "a6d48b80-1d99-4181-86e1-8510db73bd6b",
+            "sourceColumn": "Sales Line Key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Product Key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "1. Keys",
+            "isHidden": true,
+            "lineageTag": "c3e1a9b4-2f7d-4a11-9c6e-0b8d4e5a71f2",
+            "sourceColumn": "Product Key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Invoice",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "1. Keys",
+            "lineageTag": "6984471a-2778-47ce-bd1a-40c29d3d8ded",
+            "sourceColumn": "Invoice",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Stock Code",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "1. Keys",
+            "lineageTag": "986b0c93-a280-40cc-bef7-87511c3ff769",
+            "sourceColumn": "Stock Code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Customer ID",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "1. Keys",
+            "lineageTag": "46d38737-3e11-436f-974f-3e581d0efba0",
+            "sourceColumn": "Customer ID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Country",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "1. Keys",
+            "lineageTag": "1c38d548-ad90-4a02-a700-39ca4e8cfae7",
+            "sourceColumn": "Country",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Invoice Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "dateTime",
+            "displayFolder": "2. Dates",
+            "formatString": "yyyy-mm-dd hh:mm",
+            "lineageTag": "8563af95-6a9b-4f1b-a2c7-e09331a6e224",
+            "sourceColumn": "Invoice Date",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Order Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "displayFolder": "2. Dates",
+            "formatString": "yyyy-mm-dd",
+            "lineageTag": "8713211f-9374-4d0e-826f-0296fd00b58d",
+            "sourceColumn": "Order Date",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Quantity",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "3. Amounts",
+            "formatString": "#,##0",
+            "lineageTag": "d1452fbc-ee35-439d-91ff-d6d9b74a05a7",
+            "sourceColumn": "Quantity",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Unit Price",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "double",
+            "displayFolder": "3. Amounts",
+            "formatString": "£#,##0.00",
+            "lineageTag": "2d60a29d-c6f6-478a-9467-087e617147ce",
+            "sourceColumn": "Unit Price",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Line Amount",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "double",
+            "displayFolder": "3. Amounts",
+            "formatString": "£#,##0.00",
+            "lineageTag": "82a24b81-b063-41d9-a257-a3bc867178b6",
+            "sourceColumn": "Line Amount",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Is Cancel",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "displayFolder": "4. Flags",
+            "lineageTag": "b2825d60-10d4-4cbf-9e6c-958e58e22b07",
+            "sourceColumn": "Is Cancel",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Is Revenue",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "displayFolder": "4. Flags",
+            "lineageTag": "a1c15ce4-8621-4e79-885f-8df2e4956d73",
+            "sourceColumn": "Is Revenue",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Is Guest",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "displayFolder": "4. Flags",
+            "lineageTag": "911ece13-3b7e-4a11-bdf9-1ce90315e50e",
+            "sourceColumn": "Is Guest",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "562c021d-12ce-481c-bd93-223ff4b50981",
+        "partitions": [
+          {
+            "name": "Fact Sales",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = #\"Online Retail Combined\",",
+                "    WithCustomer = Table.AddColumn(",
+                "        Source,",
+                "        \"Customer ID Key\",",
+                "        each if [Customer ID] = null then \"GUEST\" else [Customer ID],",
+                "        type text",
+                "    ),",
+                "    Renamed = Table.RenameColumns(",
+                "        WithCustomer,",
+                "        {",
+                "            {\"StockCode\", \"Stock Code\"},",
+                "            {\"Description\", \"Product Name\"},",
+                "            {\"InvoiceDate\", \"Invoice Date\"},",
+                "            {\"Price\", \"Unit Price\"}",
+                "        }",
+                "    ),",
+                "    Normalized = Table.TransformColumns(",
+                "        Renamed,",
+                "        {",
+                "            {\"Stock Code\", each Text.Upper(Text.Trim(_)), type text},",
+                "            {\"Product Name\", each Text.Trim(_), type text}",
+                "        }",
+                "    ),",
+                "    Merged = Table.NestedJoin(",
+                "        Normalized,",
+                "        {\"Stock Code\", \"Product Name\"},",
+                "        #\"Dim Product\",",
+                "        {\"Stock Code\", \"Product Name\"},",
+                "        \"Dim Product\",",
+                "        JoinKind.LeftOuter",
+                "    ),",
+                "    Expanded = Table.ExpandTableColumn(",
+                "        Merged,",
+                "        \"Dim Product\",",
+                "        {\"Product Key\"},",
+                "        {\"Product Key\"}",
+                "    ),",
+                "    Removed = Table.RemoveColumns(Expanded, {\"Customer ID\", \"Is Fee\", \"Product Name\"}),",
+                "    RenamedCustomer = Table.RenameColumns(Removed, {{\"Customer ID Key\", \"Customer ID\"}}),",
+                "    TypedKey = Table.TransformColumnTypes(RenamedCustomer, {{\"Product Key\", Int64.Type}}),",
+                "    Indexed = Table.AddIndexColumn(TypedKey, \"Sales Line Key\", 1, 1, Int64.Type),",
+                "    Reordered = Table.ReorderColumns(",
+                "        Indexed,",
+                "        {",
+                "            \"Sales Line Key\", \"Product Key\", \"Invoice\", \"Stock Code\", \"Customer ID\", \"Country\",",
+                "            \"Invoice Date\", \"Order Date\", \"Quantity\", \"Unit Price\", \"Line Amount\",",
+                "            \"Is Cancel\", \"Is Revenue\", \"Is Guest\"",
+                "        }",
+                "    )",
+                "in",
+                "    Reordered"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim Product",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "Product Key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "1. Keys",
+            "isUnique": true,
+            "lineageTag": "9f2c4e81-6b0a-4d3e-8c17-5a9e2b4d1c08",
+            "sourceColumn": "Product Key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Stock Code",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "1. Keys",
+            "lineageTag": "d74b775a-36a0-4504-9401-29b3961fb181",
+            "sourceColumn": "Stock Code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Product Name",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "8b18e334-caf3-49b4-86c4-bbef80ccb423",
+            "sourceColumn": "Product Name",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "69141fc5-8e8b-48a3-8fa3-0c071aa1033c",
+        "partitions": [
+          {
+            "name": "Dim Product",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = #\"Online Retail Combined\",",
+                "    Selected = Table.SelectColumns(Source, {\"StockCode\", \"Description\"}),",
+                "    Renamed = Table.RenameColumns(",
+                "        Selected,",
+                "        {{\"StockCode\", \"Stock Code\"}, {\"Description\", \"Product Name\"}}",
+                "    ),",
+                "    Normalized = Table.TransformColumns(",
+                "        Renamed,",
+                "        {",
+                "            {\"Stock Code\", each Text.Upper(Text.Trim(_)), type text},",
+                "            {\"Product Name\", each Text.Trim(_), type text}",
+                "        }",
+                "    ),",
+                "    Deduped = Table.Distinct(Normalized, {\"Stock Code\", \"Product Name\"}),",
+                "    Sorted = Table.Sort(",
+                "        Deduped,",
+                "        {{\"Stock Code\", Order.Ascending}, {\"Product Name\", Order.Ascending}}",
+                "    ),",
+                "    WithKey = Table.AddIndexColumn(Sorted, \"Product Key\", 1, 1, Int64.Type),",
+                "    Reordered = Table.ReorderColumns(",
+                "        WithKey,",
+                "        {\"Product Key\", \"Stock Code\", \"Product Name\"}",
+                "    )",
+                "in",
+                "    Reordered"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim Customer",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "Customer ID",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "1. Keys",
+            "lineageTag": "fa76eada-6a55-4297-8970-644f2f31be71",
+            "sourceColumn": "Customer ID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Is Guest",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "displayFolder": "4. Flags",
+            "lineageTag": "3886fb7c-b780-4d91-9410-a42a6eccace1",
+            "sourceColumn": "Is Guest",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Country First",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "cf200318-39b6-4911-8f63-29c46b9d571c",
+            "sourceColumn": "Country First",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "First Invoice Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "displayFolder": "2. Dates",
+            "formatString": "yyyy-mm-dd",
+            "lineageTag": "b12ebbc2-4917-46aa-83ba-bf62e6d35a93",
+            "sourceColumn": "First Invoice Date",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Last Invoice Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "displayFolder": "2. Dates",
+            "formatString": "yyyy-mm-dd",
+            "lineageTag": "8db836d8-7b86-436a-b4e9-d74c5be1d464",
+            "sourceColumn": "Last Invoice Date",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "c118bd0e-9e14-4985-ad5c-25b5a2f0bb94",
+        "partitions": [
+          {
+            "name": "Dim Customer",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = #\"Online Retail Combined\",",
+                "    WithKey = Table.AddColumn(",
+                "        Source,",
+                "        \"Customer ID Key\",",
+                "        each if [Customer ID] = null then \"GUEST\" else [Customer ID],",
+                "        type text",
+                "    ),",
+                "    Grouped = Table.Group(",
+                "        WithKey,",
+                "        {\"Customer ID Key\"},",
+                "        {",
+                "            {\"Is Guest\", each List.Min(List.Transform([Is Guest], each if _ = true then 1 else 0)) = 1, type logical},",
+                "            {\"Country First\", each List.First(List.RemoveNulls([Country])), type text},",
+                "            {\"First Invoice Date\", each List.Min([Order Date]), type date},",
+                "            {\"Last Invoice Date\", each List.Max([Order Date]), type date}",
+                "        }",
+                "    ),",
+                "    Renamed = Table.RenameColumns(Grouped, {{\"Customer ID Key\", \"Customer ID\"}}),",
+                "    Sorted = Table.Sort(Renamed, {{\"Customer ID\", Order.Ascending}})",
+                "in",
+                "    Sorted"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim Geography",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "Country",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "3831d2c1-2800-40a5-806b-4a55a567d6e1",
+            "sourceColumn": "Country",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Region Group",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "1feb43c5-8bde-4e7e-a17c-9e15c114196d",
+            "sourceColumn": "Region Group",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "c1d39090-71f0-412d-a08c-d576d77856a8",
+        "partitions": [
+          {
+            "name": "Dim Geography",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = #\"Online Retail Combined\",",
+                "    Countries = Table.Distinct(Table.SelectColumns(Source, {\"Country\"})),",
+                "    Europe = {",
+                "        \"EIRE\", \"France\", \"Germany\", \"Netherlands\", \"Belgium\", \"Switzerland\",",
+                "        \"Spain\", \"Portugal\", \"Italy\", \"Channel Islands\", \"Finland\", \"Sweden\",",
+                "        \"Norway\", \"Denmark\", \"Austria\", \"Poland\", \"Greece\", \"Cyprus\", \"Iceland\",",
+                "        \"Malta\", \"Lithuania\", \"Czech Republic\", \"European Community\"",
+                "    },",
+                "    NorthAmerica = {\"USA\", \"Canada\", \"United States\"},",
+                "    AsiaPacific = {\"Australia\", \"Japan\", \"Singapore\", \"Hong Kong\", \"RSA\"},",
+                "    WithRegion = Table.AddColumn(",
+                "        Countries,",
+                "        \"Region Group\",",
+                "        each",
+                "            if [Country] = \"United Kingdom\" then \"United Kingdom\"",
+                "            else if List.Contains(Europe, [Country]) then \"Europe\"",
+                "            else if List.Contains(NorthAmerica, [Country]) then \"North America\"",
+                "            else if List.Contains(AsiaPacific, [Country]) then \"Asia Pacific\"",
+                "            else \"Other\",",
+                "        type text",
+                "    ),",
+                "    Sorted = Table.Sort(WithRegion, {{\"Country\", Order.Ascending}})",
+                "in",
+                "    Sorted"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Date",
+        "columns": [
+          {
+            "name": "Date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "dateTime",
+            "displayFolder": "6. Calendar Date",
+            "formatString": "yyyy-mm-dd",
+            "isDataTypeInferred": true,
+            "isKey": true,
+            "isNameInferred": true,
+            "lineageTag": "90778c2f-3988-497c-a390-789eada1f6aa",
+            "sourceColumn": "[Date]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Year (YYYY)",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "1. Year",
+            "formatString": "0",
+            "isDataTypeInferred": true,
+            "isNameInferred": true,
+            "lineageTag": "71948d0f-1220-48cc-b639-1e6fc36e3cc3",
+            "sourceColumn": "[Year (YYYY)]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Year",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "1. Year",
+            "isDataTypeInferred": true,
+            "isNameInferred": true,
+            "lineageTag": "4d95869d-167e-4fd9-b052-78046337da2c",
+            "sortByColumn": "Year (YYYY)",
+            "sourceColumn": "[Year]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Quarter Year",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "2. Quarter",
+            "isDataTypeInferred": true,
+            "isNameInferred": true,
+            "lineageTag": "438418ee-7c66-46d1-b936-5930265eab01",
+            "sortByColumn": "Year Quarter",
+            "sourceColumn": "[Quarter Year]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Year Quarter",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "2. Quarter",
+            "formatString": "0",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": true,
+            "lineageTag": "06a679c5-e893-4da6-8a89-55fd23053732",
+            "sourceColumn": "[Year Quarter]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Month Year",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "3. Month",
+            "isDataTypeInferred": true,
+            "isNameInferred": true,
+            "lineageTag": "ae64ceb5-b8ab-4643-81ec-2bc499ed51d0",
+            "sortByColumn": "Year Month",
+            "sourceColumn": "[Month Year]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Year Month",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "3. Month",
+            "formatString": "0",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": true,
+            "lineageTag": "52ac4e28-fcb5-4637-8bfb-e01f63e79f6a",
+            "sourceColumn": "[Year Month]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Month (MMM)",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "3. Month",
+            "isDataTypeInferred": true,
+            "isNameInferred": true,
+            "lineageTag": "147997d7-326e-402b-b2f6-09d898e41734",
+            "sortByColumn": "Month (MM)",
+            "sourceColumn": "[Month (MMM)]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Month (MM)",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "3. Month",
+            "formatString": "0",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": true,
+            "lineageTag": "ea48e525-79e9-4c20-9f19-f4629d85b87f",
+            "sourceColumn": "[Month (MM)]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Weekday Name",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "displayFolder": "5. Weekday",
+            "isDataTypeInferred": true,
+            "isNameInferred": true,
+            "lineageTag": "57e91390-330e-46db-843b-b069583c30d9",
+            "sortByColumn": "Weekday Number",
+            "sourceColumn": "[Weekday Name]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Weekday Number",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "displayFolder": "5. Weekday",
+            "formatString": "0",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": true,
+            "lineageTag": "c76006f0-e703-436a-b9bb-c260c4a3bb3a",
+            "sourceColumn": "[Weekday Number]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "DatesWithSales (True/False)",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "displayFolder": "7. Boolean Fields",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": true,
+            "lineageTag": "19bdfb0d-4a9d-4e9d-b823-4c241192abf9",
+            "sourceColumn": "[DatesWithSales (True/False)]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "IsThisYear (True/False)",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "displayFolder": "7. Boolean Fields",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": true,
+            "lineageTag": "8fd06e7d-b455-446c-97dc-92c2acb563b6",
+            "sourceColumn": "[IsThisYear (True/False)]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          }
+        ],
+        "dataCategory": "Time",
+        "lineageTag": "40f9024e-e7cc-4754-bba0-156006ae7d88",
+        "partitions": [
+          {
+            "name": "Date",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "VAR _MinDate = MIN ( 'Fact Sales'[Order Date] )",
+                "VAR _MaxDate = MAX ( 'Fact Sales'[Order Date] )",
+                "RETURN",
+                "    ADDCOLUMNS (",
+                "        CALENDAR ( _MinDate, _MaxDate ),",
+                "        \"Year (YYYY)\", YEAR ( ''[Date] ),",
+                "        \"Year\", FORMAT ( ''[Date], \"YYYY\" ),",
+                "        \"Quarter Year\", \"Q\" & FORMAT ( ''[Date], \"Q YYYY\" ),",
+                "        \"Year Quarter\", YEAR ( ''[Date] ) * 100 + QUARTER ( ''[Date] ),",
+                "        \"Month Year\", FORMAT ( ''[Date], \"MMM YYYY\" ),",
+                "        \"Year Month\", YEAR ( ''[Date] ) * 100 + MONTH ( ''[Date] ),",
+                "        \"Month (MMM)\", FORMAT ( ''[Date], \"MMM\" ),",
+                "        \"Month (MM)\", MONTH ( ''[Date] ),",
+                "        \"Weekday Name\", FORMAT ( ''[Date], \"DDDD\" ),",
+                "        \"Weekday Number\", WEEKDAY ( ''[Date], 2 ),",
+                "        \"DatesWithSales (True/False)\", ''[Date] <= _MaxDate,",
+                "        \"IsThisYear (True/False)\", YEAR ( ''[Date] ) = YEAR ( _MaxDate )",
+                "    )"
+              ],
+              "type": "calculated"
+            }
+          }
+        ]
+      },
+      {
+        "name": "_Measures",
+        "columns": [
+          {
+            "name": "Value",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": true,
+            "lineageTag": "a64587d0-701e-4b18-b5b8-d5349b19409d",
+            "sourceColumn": "[Value]",
+            "summarizeBy": "sum",
+            "type": "calculatedTableColumn"
+          }
+        ],
+        "isHidden": true,
+        "lineageTag": "333e17d2-d8c9-4431-9859-d4f7b0ced21d",
+        "measures": [
+          {
+            "name": "Revenue",
+            "description": "Net sale-line revenue in GBP. Excludes cancellations, fees, and non-positive quantity or price.",
+            "displayFolder": "1. Measures\\Revenue",
+            "expression": [
+              "ROUND (",
+              "    CALCULATE (",
+              "        SUM ( 'Fact Sales'[Line Amount] ),",
+              "        'Fact Sales'[Is Revenue] = TRUE ()",
+              "    ),",
+              "    2",
+              ")"
+            ],
+            "formatString": "£#,##0;-£#,##0;£0",
+            "lineageTag": "8fda2723-8535-4f26-b8e7-b0490a9631ed"
+          },
+          {
+            "name": "Orders",
+            "description": "Distinct sale invoices. Cancellations and fee-only invoices are excluded.",
+            "displayFolder": "1. Measures\\Orders",
+            "expression": [
+              "CALCULATE (",
+              "    DISTINCTCOUNT ( 'Fact Sales'[Invoice] ),",
+              "    'Fact Sales'[Is Revenue] = TRUE ()",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "99f54ef8-fdb7-4eb6-80a1-5cf547f7f654"
+          },
+          {
+            "name": "Customers",
+            "description": "Distinct identified customers on sale lines. Guests are excluded.",
+            "displayFolder": "1. Measures\\Customers",
+            "expression": [
+              "CALCULATE (",
+              "    DISTINCTCOUNT ( 'Fact Sales'[Customer ID] ),",
+              "    'Fact Sales'[Is Revenue] = TRUE (),",
+              "    'Fact Sales'[Is Guest] = FALSE ()",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "be682969-ddcd-4c9d-a32c-abddbc38ac99"
+          },
+          {
+            "name": "Order Value (Avg)",
+            "description": "Average order value: Revenue / Orders.",
+            "displayFolder": "1. Measures\\AOV",
+            "expression": [
+              "DIVIDE (",
+              "    [Revenue],",
+              "    [Orders]",
+              ")"
+            ],
+            "formatString": "£#,##0.00;£#,##0.00;£0.00",
+            "lineageTag": "3c0fddff-5474-4957-bdba-504eb179b3e2"
+          },
+          {
+            "name": "Revenue (CY YTD)",
+            "displayFolder": "1. Measures\\Revenue\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Revenue],",
+              "    DATESYTD ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "£#,##0;£#,##0;£0",
+            "lineageTag": "ae2d2983-ea85-4895-8a10-de33ec10d559"
+          },
+          {
+            "name": "Revenue (PY)",
+            "displayFolder": "1. Measures\\Revenue",
+            "expression": [
+              "CALCULATE (",
+              "    [Revenue],",
+              "    SAMEPERIODLASTYEAR ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "£#,##0;£#,##0;£0",
+            "lineageTag": "ebc51c6f-1bc6-4c11-bf5d-c92fc85562e4"
+          },
+          {
+            "name": "Revenue (PY YTD)",
+            "displayFolder": "1. Measures\\Revenue\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Revenue],",
+              "    SAMEPERIODLASTYEAR ( DATESYTD ( 'Date'[Date] ) )",
+              ")"
+            ],
+            "formatString": "£#,##0;£#,##0;£0",
+            "lineageTag": "01f3222a-b9b8-43ed-9170-3a2537a32b76"
+          },
+          {
+            "name": "Revenue (Δ PY)",
+            "displayFolder": "1. Measures\\Revenue\\vs. PY",
+            "expression": [
+              "VAR _CY = [Revenue]",
+              "VAR _PY = [Revenue (PY)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+£#,##0;-£#,##0;£0",
+            "lineageTag": "c95124a5-279d-426b-9bc3-9c0b3867f9a9"
+          },
+          {
+            "name": "Revenue (Δ% PY)",
+            "displayFolder": "1. Measures\\Revenue\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Revenue (Δ PY)],",
+              "    [Revenue (PY)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "0ef786ec-62a0-4968-85df-ac5dddc1b60e"
+          },
+          {
+            "name": "Revenue (Δ PY YTD)",
+            "displayFolder": "1. Measures\\Revenue\\YTD\\vs. PY",
+            "expression": [
+              "VAR _CY = [Revenue (CY YTD)]",
+              "VAR _PY = [Revenue (PY YTD)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+£#,##0;-£#,##0;£0",
+            "lineageTag": "96f620d1-6afe-487b-a761-4f29d3f05624"
+          },
+          {
+            "name": "Revenue (Δ% PY YTD)",
+            "displayFolder": "1. Measures\\Revenue\\YTD\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Revenue (Δ PY YTD)],",
+              "    [Revenue (PY YTD)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "8fad7a91-2aa2-4ad5-9e7d-65f96fa60f9d"
+          },
+          {
+            "name": "Orders (CY YTD)",
+            "displayFolder": "1. Measures\\Orders\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Orders],",
+              "    DATESYTD ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "36aaecab-e599-4910-935e-10064582e5d8"
+          },
+          {
+            "name": "Orders (PY)",
+            "displayFolder": "1. Measures\\Orders",
+            "expression": [
+              "CALCULATE (",
+              "    [Orders],",
+              "    SAMEPERIODLASTYEAR ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "f9b0a979-4700-499d-8058-2a329d705a70"
+          },
+          {
+            "name": "Orders (PY YTD)",
+            "displayFolder": "1. Measures\\Orders\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Orders],",
+              "    SAMEPERIODLASTYEAR ( DATESYTD ( 'Date'[Date] ) )",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "218cc02f-5835-4acb-979e-2e598555545a"
+          },
+          {
+            "name": "Orders (Δ PY)",
+            "displayFolder": "1. Measures\\Orders\\vs. PY",
+            "expression": [
+              "VAR _CY = [Orders]",
+              "VAR _PY = [Orders (PY)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+#,##0;-#,##0;0",
+            "lineageTag": "8a09ba20-34dc-441f-bd3b-34a24c5328e8"
+          },
+          {
+            "name": "Orders (Δ% PY)",
+            "displayFolder": "1. Measures\\Orders\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Orders (Δ PY)],",
+              "    [Orders (PY)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "0791ff7a-a20c-4962-91c7-3cdf13e20edb"
+          },
+          {
+            "name": "Orders (Δ PY YTD)",
+            "displayFolder": "1. Measures\\Orders\\YTD\\vs. PY",
+            "expression": [
+              "VAR _CY = [Orders (CY YTD)]",
+              "VAR _PY = [Orders (PY YTD)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+#,##0;-#,##0;0",
+            "lineageTag": "450b7086-7f34-48be-a448-eb74a548a691"
+          },
+          {
+            "name": "Orders (Δ% PY YTD)",
+            "displayFolder": "1. Measures\\Orders\\YTD\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Orders (Δ PY YTD)],",
+              "    [Orders (PY YTD)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "9a1f908d-6e78-47b1-825e-864a4638af12"
+          },
+          {
+            "name": "Customers (CY YTD)",
+            "displayFolder": "1. Measures\\Customers\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Customers],",
+              "    DATESYTD ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "424bdeba-7128-4b02-830d-9feb03e6cffa"
+          },
+          {
+            "name": "Customers (PY)",
+            "displayFolder": "1. Measures\\Customers",
+            "expression": [
+              "CALCULATE (",
+              "    [Customers],",
+              "    SAMEPERIODLASTYEAR ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "099b538d-954a-4bd8-90fd-f5a0430b3f89"
+          },
+          {
+            "name": "Customers (PY YTD)",
+            "displayFolder": "1. Measures\\Customers\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Customers],",
+              "    SAMEPERIODLASTYEAR ( DATESYTD ( 'Date'[Date] ) )",
+              ")"
+            ],
+            "formatString": "#,##0",
+            "lineageTag": "36bf82e0-071e-475f-a047-1f329a735beb"
+          },
+          {
+            "name": "Customers (Δ PY)",
+            "displayFolder": "1. Measures\\Customers\\vs. PY",
+            "expression": [
+              "VAR _CY = [Customers]",
+              "VAR _PY = [Customers (PY)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+#,##0;-#,##0;0",
+            "lineageTag": "e92176b4-071a-4259-a1c0-90ac9566c8cd"
+          },
+          {
+            "name": "Customers (Δ% PY)",
+            "displayFolder": "1. Measures\\Customers\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Customers (Δ PY)],",
+              "    [Customers (PY)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "053d6d32-8d8a-4dda-96d7-dd7f4eef1e86"
+          },
+          {
+            "name": "Customers (Δ PY YTD)",
+            "displayFolder": "1. Measures\\Customers\\YTD\\vs. PY",
+            "expression": [
+              "VAR _CY = [Customers (CY YTD)]",
+              "VAR _PY = [Customers (PY YTD)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+#,##0;-#,##0;0",
+            "lineageTag": "7bcdf0ac-381d-40be-a3d2-f007fa68219c"
+          },
+          {
+            "name": "Customers (Δ% PY YTD)",
+            "displayFolder": "1. Measures\\Customers\\YTD\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Customers (Δ PY YTD)],",
+              "    [Customers (PY YTD)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "6b16ba41-d8c1-4607-a73e-c46192e9973d"
+          },
+          {
+            "name": "Order Value (Avg) (CY YTD)",
+            "displayFolder": "1. Measures\\AOV\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Order Value (Avg)],",
+              "    DATESYTD ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "£#,##0.00;£#,##0.00;£0.00",
+            "lineageTag": "695a5a32-e82d-413b-a86a-e13332901f38"
+          },
+          {
+            "name": "Order Value (Avg) (PY)",
+            "displayFolder": "1. Measures\\AOV",
+            "expression": [
+              "CALCULATE (",
+              "    [Order Value (Avg)],",
+              "    SAMEPERIODLASTYEAR ( 'Date'[Date] )",
+              ")"
+            ],
+            "formatString": "£#,##0.00;£#,##0.00;£0.00",
+            "lineageTag": "e884132d-3c49-4262-892e-caa5306383f2"
+          },
+          {
+            "name": "Order Value (Avg) (PY YTD)",
+            "displayFolder": "1. Measures\\AOV\\YTD",
+            "expression": [
+              "CALCULATE (",
+              "    [Order Value (Avg)],",
+              "    SAMEPERIODLASTYEAR ( DATESYTD ( 'Date'[Date] ) )",
+              ")"
+            ],
+            "formatString": "£#,##0.00;£#,##0.00;£0.00",
+            "lineageTag": "4b1c7602-5a88-41de-b1f1-424b296a4565"
+          },
+          {
+            "name": "Order Value (Avg) (Δ PY)",
+            "displayFolder": "1. Measures\\AOV\\vs. PY",
+            "expression": [
+              "VAR _CY = [Order Value (Avg)]",
+              "VAR _PY = [Order Value (Avg) (PY)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+£#,##0.00;-£#,##0.00;£0.00",
+            "lineageTag": "7b33c6f5-4232-49b3-ac28-78f81545a9df"
+          },
+          {
+            "name": "Order Value (Avg) (Δ% PY)",
+            "displayFolder": "1. Measures\\AOV\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Order Value (Avg) (Δ PY)],",
+              "    [Order Value (Avg) (PY)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "25ebbf20-c0b7-4bb8-8f07-78c587a5dccd"
+          },
+          {
+            "name": "Order Value (Avg) (Δ PY YTD)",
+            "displayFolder": "1. Measures\\AOV\\YTD\\vs. PY",
+            "expression": [
+              "VAR _CY = [Order Value (Avg) (CY YTD)]",
+              "VAR _PY = [Order Value (Avg) (PY YTD)]",
+              "RETURN",
+              "    _CY - _PY"
+            ],
+            "formatString": "+£#,##0.00;-£#,##0.00;£0.00",
+            "lineageTag": "cbeabd8f-bc4a-410e-8333-b438f8c55445"
+          },
+          {
+            "name": "Order Value (Avg) (Δ% PY YTD)",
+            "displayFolder": "1. Measures\\AOV\\YTD\\vs. PY",
+            "expression": [
+              "DIVIDE (",
+              "    [Order Value (Avg) (Δ PY YTD)],",
+              "    [Order Value (Avg) (PY YTD)]",
+              ")"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "0dad0a28-2aab-47da-80ad-3838ac7ef832"
+          },
+          {
+            "name": "Zero",
+            "displayFolder": "2. Report-Specific Objects\\Axis",
+            "expression": "0",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "6f334bf4-dda1-46ba-ba95-3b4cf6913dfd"
+          },
+          {
+            "name": "Selected Measure Name",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": [
+              "VAR _Selected =",
+              "    MAX ( 'FP - Selected Measure'[Selected Measure] )",
+              "RETURN",
+              "    IF ( ISBLANK ( _Selected ), \"Revenue\", _Selected )"
+            ],
+            "isHidden": true,
+            "lineageTag": "ef0b37f2-0a93-4cab-89cd-1f08af911616"
+          },
+          {
+            "name": "Selected Metric",
+            "displayFolder": "1. Measures",
+            "expression": [
+              "VAR _Value =",
+              "    SWITCH (",
+              "        [Selected Measure Name],",
+              "        \"Revenue\", [Revenue],",
+              "        \"Orders\", [Orders],",
+              "        \"Customers\", [Customers],",
+              "        \"Order Value (Avg)\", [Order Value (Avg)],",
+              "        [Revenue]",
+              "    )",
+              "RETURN",
+              "    IF (",
+              "        [Selected Measure Name] IN { \"Orders\", \"Customers\" },",
+              "        ROUND ( _Value, 0 ),",
+              "        ROUND ( _Value, 2 )",
+              "    )"
+            ],
+            "formatStringDefinition": {
+              "expression": [
+                "SWITCH (",
+                "    [Selected Measure Name],",
+                "    \"Revenue\", \"£#,##0;-£#,##0;£0\",",
+                "    \"Orders\", \"#,##0\",",
+                "    \"Customers\", \"#,##0\",",
+                "    \"Order Value (Avg)\", \"£#,##0.00;£#,##0.00;£0.00\",",
+                "    \"£#,##0;-£#,##0;£0\"",
+                ")"
+              ]
+            },
+            "lineageTag": "a7c4e91d-3b58-4f02-9e6a-1d8c5b7f2403"
+          },
+          {
+            "name": "Selected Measure (Latest Point)",
+            "description": "Value of the field-parameter metric on the latest month in selection. Blank on other months so the line chart can label the last point.",
+            "displayFolder": "2. Report-Specific Objects\\Trend",
+            "expression": [
+              "VAR _LatestDate =",
+              "    CALCULATE (",
+              "        MAX ( 'Date'[Date] ),",
+              "        ALLSELECTED ( 'Date' )",
+              "    )",
+              "VAR _LatestYM = YEAR ( _LatestDate ) * 100 + MONTH ( _LatestDate )",
+              "VAR _ThisYM =",
+              "    MAX ( 'Date'[Year Month] )",
+              "RETURN",
+              "    IF ( _ThisYM = _LatestYM, [Selected Metric], BLANK () )"
+            ],
+            "isHidden": true,
+            "lineageTag": "d0dd534b-dc67-43f5-9dde-af75ea01e361"
+          },
+          {
+            "name": "110% of Highest Selected Measure",
+            "displayFolder": "2. Report-Specific Objects\\Axis",
+            "expression": "1.1 * MAXX ( ALLSELECTED ( 'Date'[Month Year] ), [Selected Metric] )",
+            "isHidden": true,
+            "lineageTag": "c1b4d8d8-9155-4926-b1f0-01aebb1a3028"
+          },
+          {
+            "name": "Title - Page",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": [
+              "VAR _MinDate = MIN ( 'Date'[Date] )",
+              "VAR _MaxDate = MAX ( 'Date'[Date] )",
+              "VAR _Period =",
+              "    FORMAT ( _MinDate, \"MMM YYYY\" ) & \" – \" & FORMAT ( _MaxDate, \"MMM YYYY\" )",
+              "RETURN",
+              "    \"Retail Performance  ·  \" & _Period"
+            ],
+            "isHidden": true,
+            "lineageTag": "0e1b9b5a-f114-417b-aa4b-b408b0641998"
+          },
+          {
+            "name": "Title - Trend",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": "[Selected Measure Name] & \" Trend\"",
+            "isHidden": true,
+            "lineageTag": "04f2a63e-d760-4a99-b3d7-fb81ce38dad3"
+          },
+          {
+            "name": "Title - Products",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": "\"Top Products by \" & [Selected Measure Name]",
+            "isHidden": true,
+            "lineageTag": "db845829-ceef-400a-b2a6-200eb7857d86"
+          },
+          {
+            "name": "Title - Countries",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": "\"Top Countries by \" & [Selected Measure Name]",
+            "isHidden": true,
+            "lineageTag": "67acfd33-7130-4bcf-8652-7925c6ee0785"
+          },
+          {
+            "name": "Subtitle - Revenue",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": [
+              "VAR _Delta = [Revenue (Δ% PY)]",
+              "RETURN",
+              "    \"vs LY  \" & FORMAT ( _Delta, \"▲ #,##0.0%;▼ #,##0.0%;0.0%\" )"
+            ],
+            "isHidden": true,
+            "lineageTag": "8c208427-d818-4040-8765-40cb7aeecdab"
+          },
+          {
+            "name": "Subtitle - Orders",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": [
+              "VAR _Delta = [Orders (Δ% PY)]",
+              "RETURN",
+              "    \"vs LY  \" & FORMAT ( _Delta, \"▲ #,##0.0%;▼ #,##0.0%;0.0%\" )"
+            ],
+            "isHidden": true,
+            "lineageTag": "a38d7e50-4ae6-4abe-a4b4-1a38038f1302"
+          },
+          {
+            "name": "Subtitle - Customers",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": [
+              "VAR _Delta = [Customers (Δ% PY)]",
+              "RETURN",
+              "    \"vs LY  \" & FORMAT ( _Delta, \"▲ #,##0.0%;▼ #,##0.0%;0.0%\" )"
+            ],
+            "isHidden": true,
+            "lineageTag": "3c9b3f66-8388-42a3-930a-4531ebe418a3"
+          },
+          {
+            "name": "Subtitle - AOV",
+            "displayFolder": "2. Report-Specific Objects\\Titles",
+            "expression": [
+              "VAR _Delta = [Order Value (Avg) (Δ% PY)]",
+              "RETURN",
+              "    \"vs LY  \" & FORMAT ( _Delta, \"▲ #,##0.0%;▼ #,##0.0%;0.0%\" )"
+            ],
+            "isHidden": true,
+            "lineageTag": "a609801b-723f-4e39-8c33-18dcb67432c4"
+          },
+          {
+            "name": "Color - KPI Variance",
+            "displayFolder": "2. Report-Specific Objects\\Colours",
+            "expression": [
+              "VAR _Delta = [Revenue (Δ% PY)]",
+              "RETURN",
+              "    IF ( _Delta >= 0, \"#74afcc\", \"#c56161\" )"
+            ],
+            "isHidden": true,
+            "lineageTag": "f32de68b-6aeb-4e8f-a1b0-4a79cb97e529"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "_Measures",
+            "mode": "import",
+            "source": {
+              "expression": "{ 1 }",
+              "type": "calculated"
+            }
+          }
+        ]
+      },
+      {
+        "name": "FP - Selected Measure",
+        "columns": [
+          {
+            "name": "Selected Measure",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "isDataTypeInferred": true,
+            "isNameInferred": false,
+            "lineageTag": "26fabd6a-372e-4a8f-adb7-7758f919f9a8",
+            "relatedColumnDetails": {
+              "groupByColumns": [
+                {
+                  "groupingColumn": "Selected Measure Fields"
+                }
+              ]
+            },
+            "sortByColumn": "Selected Measure Order",
+            "sourceColumn": "[Value1]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Selected Measure Fields",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "extendedProperties": [
+              {
+                "name": "ParameterMetadata",
+                "type": "json",
+                "value": {
+                  "kind": 2,
+                  "version": 3
+                }
+              }
+            ],
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": false,
+            "lineageTag": "50e69664-6d8f-446a-8298-7fbf542f3e19",
+            "sortByColumn": "Selected Measure Order",
+            "sourceColumn": "[Value2]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Selected Measure Order",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isDataTypeInferred": true,
+            "isHidden": true,
+            "isNameInferred": false,
+            "lineageTag": "52a86020-ef39-485e-bade-8f663323fe13",
+            "sourceColumn": "[Value3]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          }
+        ],
+        "lineageTag": "fb4b897a-492c-460b-ac3c-b0db223508a8",
+        "partitions": [
+          {
+            "name": "FP - Selected Measure",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "{",
+                "    ( \"Revenue\", NAMEOF ( '_Measures'[Revenue] ), 0 ),",
+                "    ( \"Orders\", NAMEOF ( '_Measures'[Orders] ), 1 ),",
+                "    ( \"Customers\", NAMEOF ( '_Measures'[Customers] ), 2 ),",
+                "    ( \"Order Value (Avg)\", NAMEOF ( '_Measures'[Order Value (Avg)] ), 3 )",
+                "}"
+              ],
+              "type": "calculated"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Last Refresh",
+        "columns": [
+          {
+            "name": "Last Refresh",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "yyyy-mm-dd hh:mm",
+            "lineageTag": "54eba3f4-738c-46f6-ae9c-1e722e1ec045",
+            "sourceColumn": "Last Refresh",
+            "summarizeBy": "none"
+          }
+        ],
+        "isHidden": true,
+        "lineageTag": "4fec0422-e65e-4168-9060-00d4aa59f2b0",
+        "measures": [
+          {
+            "name": "Last Refresh Date",
+            "displayFolder": "2. Report-Specific Objects",
+            "expression": [
+              "FORMAT (",
+              "    MAX ( 'Last Refresh'[Last Refresh] ),",
+              "    \"MMM dd, hh:mm\"",
+              ")"
+            ],
+            "lineageTag": "e1060e1e-fde9-45bb-97c0-ade3ca04a5e9"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Last Refresh",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = DateTimeZone.FixedLocalNow(),",
+                "    ToTable = #table(",
+                "        type table [#\"Last Refresh\" = datetimezone],",
+                "        {{Source}}",
+                "    )",
+                "in",
+                "    ToTable"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
