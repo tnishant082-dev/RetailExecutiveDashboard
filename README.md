@@ -1,18 +1,6 @@
 # Retail Executive Dashboard
 
-End-to-end data analyst project for a UK online retailer (Online Retail II, Dec 2009 – Dec 2011): Excel dictionary & cleaning log, Python cleaning/EDA, SQL staging & KPI queries, and a Power BI executive page for revenue, orders, customers, and mix.
-
-**GitHub:** [tnishant082-dev/RetailExecutiveDashboard](https://github.com/tnishant082-dev/RetailExecutiveDashboard)
-
-**Semantic model / report stub:** [`RetailExecutiveDashboard.pbip`](./RetailExecutiveDashboard.pbip) · portfolio visuals in [`screenshots/`](./screenshots/)
-
----
-
-## Project Overview
-
-Built so a commercial lead can open one page and see revenue, orders, customers, and where the business is coming from — without digging through raw invoice lines.
-
-Source workbook: [`data/online_retail_II.xlsx`](./data/online_retail_II.xlsx)
+Analysis of a UK online retailer (Online Retail II, Dec 2009 – Dec 2011). Revenue, orders, customers, and market mix are reviewed together so commercial leads can see how the business is performing and where it is coming from.
 
 ---
 
@@ -22,43 +10,22 @@ The source file is a line-level sales extract. Useful for ops, hard for leadersh
 
 Problems it created:
 
-- No single view of **revenue, orders, customers, and AOV**
+- No single view of revenue, orders, customers, and AOV
 - Product and country performance buried in thousands of invoice rows
 - Guest checkouts, cancellations, and fee codes mixed with real sales
 - No easy way to answer: *how are we doing, and where is it coming from?*
 
 ---
 
-## End-to-End Workflow
+## Dashboard Overview
 
-```text
-Online Retail II workbook (2 sheets)
-        │
-        ▼
-   Excel  ──►  dictionary, cleaning log, top product / country tables
-        │
-        ▼
-   Python ──►  dedupe, cancel/fee filters, monthly trend charts
-        │
-        ▼
-   SQL    ──►  staging + revenue view, quality checks, KPI queries
-        │
-        ▼
-   Power BI ──► Power Query cleanup, star schema, exec page + YoY
-```
+An interactive executive dashboard for commercial review. KPI cards stay on screen while trend and ranking views switch between revenue, orders, customers, and AOV.
 
-| Layer | What it does |
-|---|---|
-| **Excel** | Field dictionary, cleaning decisions, dashboard KPI / ranking tables |
-| **Python** | Combine years, apply revenue rules, exploratory charts |
-| **SQL** | Staging DDL, fee-code checks, revenue / trend / ranking queries |
-| **Power BI** | Fact Sales + dims, DAX KPIs with vs last year |
+Period covered: **Dec 2009 – Dec 2011**
 
 ---
 
 ## Key Metrics
-
-Figures from the live report on the cleaned Online Retail II period (Dec 2009 – Dec 2011), with YoY on the KPI cards:
 
 | KPI | Value | vs last year |
 |---|---|---|
@@ -73,29 +40,25 @@ Independent Python / SQL reconciliation on the same filters lands near **£19.7M
 
 ## Dashboard Pages
 
-**Retail Performance** (single executive page):
+### Executive Dashboard
 
-- **Revenue / Orders / Customers / AOV** cards stay on screen (with vs LY)
-- Top slicer switches the trend + ranking charts between revenue, orders, customers, and AOV
-- Dark theme for a clean exec read
+![Executive Dashboard](./screenshots/executive-dashboard.png)
 
-What leadership can do in one screen:
+- Revenue **£20M**, orders **40K**, customers **5,877**, and AOV **£501.85** set the commercial baseline.
+- YoY cards show strong growth (**+91.5%** revenue, **+84.9%** orders) with a modest AOV lift (**+3.6%**).
+- One screen keeps mix, trend, and rankings available without hopping files.
 
-- Spot **November holiday peaks** on the trend (strong seasonality in 2010 and 2011)
-- See that a **small set of products** drives a large share of orders
-- See that the **UK dominates** order volume (~36K), with Germany / EIRE / France next
+### Orders Trend
 
----
+![Orders Trend](./screenshots/orders-trend.png)
 
-## Key Insights
+- Clear seasonality: peaks in **November** 2010 and 2011, then a sharp drop into Dec / Jan.
+- Tooltip example: **Jan 2011 → 1,083** on the selected metric.
+- Axis starts at zero so the chart does not overstate drops.
 
-### Orders trend
+### Top Products by Orders
 
-- Clear **seasonality**: peaks in **November** 2010 and 2011, then a sharp drop into Dec / Jan
-- Tooltip example: **Jan 2011 → 1,083** on the selected metric
-- Axis starts at zero so the chart does not overstate drops
-
-### Top products by orders
+![Top Products by Orders](./screenshots/top-products.png)
 
 | Rank | Product | Orders |
 |---|---|---|
@@ -104,13 +67,13 @@ What leadership can do in one screen:
 | 3 | JUMBO BAG RED RETROSPOT | 3,269 |
 | 4 | ASSORTED COLOUR BIRD ORNAMENT | 2,807 |
 | 5 | PARTY BUNTING | 2,674 |
-| 6 | LUNCH BAG BLACK SKULL. | 2,351 |
-| 7 | JUMBO STORAGE BAG SUKI | 2,329 |
-| 8 | STRAWBERRY CERAMIC TRINKET BOX | 2,310 |
-| 9 | JUMBO SHOPPER VINTAGE RED PAISLEY | 2,192 |
-| 10 | HEART OF WICKER SMALL | 2,151 |
 
-### Top countries by orders
+- A small set of SKUs drives a large share of order volume.
+- Hero products are a practical list for inventory and promo focus.
+
+### Top Countries by Orders
+
+![Top Countries by Orders](./screenshots/top-countries.png)
 
 | Rank | Country | Orders |
 |---|---|---|
@@ -119,108 +82,63 @@ What leadership can do in one screen:
 | 3 | EIRE | 625 |
 | 4 | France | 609 |
 | 5 | Netherlands | 221 |
-| 6 | Spain | 149 |
-| 7 | Belgium | 144 |
-| 8 | Sweden | 101 |
-| 9 | Australia | 94 |
-| 10 | Portugal | 92 |
 
-Heavy UK concentration — export markets are real but much smaller.
+- UK concentration is heavy (~**36.4K** orders); export markets are real but much smaller.
+- Germany, EIRE, and France are the next markets to watch after the domestic base.
 
 ---
 
-## Business Impact
+## Key Findings
 
-- One-screen commercial review for revenue, orders, customers, and AOV
-- Clear hero-SKU list for inventory and promo focus
-- Transparent UK vs export mix for channel conversations
-- Documented cleaning rules (cancels, fees, guests) so finance and ops share definitions
-- Repeatable Excel → Python → SQL → Power BI path when new months arrive
+1. One-screen commercial review works when revenue, orders, customers, and AOV share definitions.
+2. November holiday peaks are structural in both 2010 and 2011.
+3. A short hero-SKU list (hanging heart, cake stand, jumbo bag) drives a large share of orders.
+4. UK dominates order volume; export markets matter but are a long tail.
+5. Documented cleaning rules (cancels, fees, guests) keep finance and ops on the same numbers.
 
 ---
 
-## Data Model / Tools
+## Analysis Process
 
-Star schema:
+- Collected and cleaned the Online Retail II workbook.
+- Validated revenue, orders, customers, and AOV definitions.
+- Performed exploratory analysis on monthly trends and rankings.
+- Investigated product and country concentration.
+- Calculated business metrics used in the dashboard.
+- Built dashboard visuals for executive commercial review.
 
-| Table | Role |
-|---|---|
-| **Fact Sales** | One row per invoice line — qty, price, line amount, dates, cancel / revenue / guest flags |
-| **Dim Product** | Product key, stock code, name (surrogate key because stock codes are not unique) |
-| **Dim Customer** | Customer id, guest flag, first country, first / last invoice dates |
-| **Dim Geography** | Country + simple region |
-| **Date** | Marked date table for trend and time intelligence |
+---
 
-Relationships are single-direction, many-to-one, from the fact into each dimension.
+## Tools Used
 
-**Tools:** Power BI · Power Query · DAX · Python (pandas) · SQL · Excel
+- SQL
+- Python
+- Excel
+- Dashboarding
 
 ---
 
 ## Repository Structure
 
 ```text
-excel/                           # dictionary, cleaning log, summary tables
-sql/                             # staging DDL, quality checks, KPI queries
-notebooks/                       # cleaning + EDA notebook
-python/                          # KPI helper + optional chart outputs
-data/                            # online_retail_II.xlsx (+ optional cleaned sample)
-RetailExecutiveDashboard.pbip    # Power BI project entry
-RetailExecutiveDashboard.Dataset/
-RetailExecutiveDashboard.Report/
-screenshots/
-requirements.txt
-README.md
+data/          source workbook and cleaned samples
+sql/           staging, quality, and KPI queries
+python/        cleaning and metric checks
+excel/         dictionary and summary tables
+screenshots/   dashboard page images
+notebooks/     cleaning and EDA
 ```
 
 ---
 
-## How to open / reproduce
+## How to View
 
-1. Clone the repo
-2. `pip install -r requirements.txt`
-3. Run `notebooks/01_cleaning_eda.ipynb` (workbook load takes a minute)
-4. Load invoice lines into `stg_retail_raw` and run `sql/01_create_staging.sql` → `02_quality_checks.sql` → `03_kpi_queries.sql`
-5. Open `RetailExecutiveDashboard.pbip` in Power BI Desktop
-6. If data does not load, set `pOnlineRetailPath` to `data/online_retail_II.xlsx`
-
----
-
-## Screenshots
-
-Portfolio report visuals for review — **numbers come from the cleaned Online Retail II pipeline** (`data/`, `sql/`, Python outputs) in this repo. Not a claim that these PNGs are live Power BI Desktop exports.
-
-### Retail Performance
-
-![Retail Performance dashboard](screenshots/executive-dashboard.png)
-
-### Data model
-
-![Star schema data model](screenshots/data-model.png)
-
-### Orders trend
-
-![Orders trend](screenshots/orders-trend.png)
-
-### Top products by orders
-
-![Top products by orders](screenshots/top-products.png)
-
-### Top countries by orders
-
-![Top countries by orders](screenshots/top-countries.png)
-
----
-
-## Dataset
-
-- **Source:** Online Retail II
-- **Period:** Dec 2009 – Dec 2011
-- **File in repo:** [`data/online_retail_II.xlsx`](./data/online_retail_II.xlsx)
-- Optional sample of cleaned revenue lines: [`data/cleaned_revenue_sample.csv`](./data/cleaned_revenue_sample.csv)
+1. Review screenshots under [`screenshots/`](./screenshots/).
+2. Open the source workbook under [`data/`](./data/).
+3. Reproduce KPIs with `sql/03_kpi_queries.sql`.
 
 ---
 
 ## Author
 
-[Nishant Tyagi](https://github.com/tnishant082-dev)
+Nishant Tyagi
