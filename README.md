@@ -2,6 +2,9 @@
 
 Analysis of a UK online retailer (Online Retail II, Dec 2009 – Dec 2011). Revenue, orders, customers, and market mix are reviewed together so commercial leads can see how the business is performing and where it is coming from.
 
+**Walkthrough:** [`artifacts/retail-executive-dashboard-demo.mp4`](./artifacts/retail-executive-dashboard-demo.mp4)
+
+
 ---
 
 ## Business Problem
@@ -111,31 +114,32 @@ Independent Python / SQL reconciliation on the same filters lands near **£19.7M
 
 ## Tools Used
 
+- Power BI
 - SQL
 - Python
 - Excel
-- Dashboarding
 
 ---
 
 ## Repository Structure
 
 ```text
-data/          source workbook and cleaned samples
-sql/           staging, quality, and KPI queries
-python/        cleaning and metric checks
-excel/         dictionary and summary tables
+data/          cleaned tables (csv / xlsx / parquet)
+excel/         dictionary, cleaning log, summary
+sql/           KPI and quality queries
+python/        EDA / cleaning / feature scripts
+dashboard/     Power BI project (.pbip)
 screenshots/   dashboard page images
-notebooks/     cleaning and EDA
+artifacts/     walkthrough video
 ```
 
 ---
 
 ## How to View
 
-1. Review screenshots under [`screenshots/`](./screenshots/).
-2. Open the source workbook under [`data/`](./data/).
-3. Reproduce KPIs with `sql/03_kpi_queries.sql`.
+1. Open `dashboard/RetailExecutiveDashboard.pbip` in Power BI Desktop
+2. See [`screenshots/`](./screenshots/)
+3. Watch [`artifacts/retail-executive-dashboard-demo.mp4`](./artifacts/retail-executive-dashboard-demo.mp4)
 
 ---
 
