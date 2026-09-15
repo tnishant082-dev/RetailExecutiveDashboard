@@ -4,7 +4,7 @@ End-to-end data analyst project for a UK online retailer (Online Retail II, Dec 
 
 **GitHub:** [tnishant082-dev/RetailExecutiveDashboard](https://github.com/tnishant082-dev/RetailExecutiveDashboard)
 
-**Open in Power BI Desktop:** [`RetailExecutiveDashboard.pbip`](./RetailExecutiveDashboard.pbip)
+**Semantic model / report stub:** [`RetailExecutiveDashboard.pbip`](./RetailExecutiveDashboard.pbip) · portfolio visuals in [`screenshots/`](./screenshots/)
 
 ---
 
@@ -187,6 +187,8 @@ README.md
 ---
 
 ## Screenshots
+
+Portfolio report visuals for review — **numbers come from the cleaned Online Retail II pipeline** (`data/`, `sql/`, Python outputs) in this repo. Not a claim that these PNGs are live Power BI Desktop exports.
 
 ### Retail Performance
 
